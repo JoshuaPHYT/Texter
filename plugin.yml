@@ -9,6 +9,8 @@ mcpe-protocol:
 softdepend:
   - FormAPI # jojoe77777/FormAPI
 virions:
+  - accessors-trait # fuyutsuki/AccessorsTrait
+  - libdesign # fuyutsuki/libdesign-pattern
   - libFormAPI # jojoe77777/libFormAPI
 author: yuko_fuyutsuki
 authors:

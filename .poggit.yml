@@ -6,6 +6,10 @@ projects:
     path: ""
     icon: "/assets/Logo.png"
     libs:
+      - src: fuyutsuki/accessors-trait/accessors-trait
+        version: 0.4.0
+      - src: fuyutsuki/libdesign-pattern/libdesign-pattern
+        version: 0.1.0
       - src: jojoe77777/FormAPI/libFormAPI
         version: 1.3.0
 ...
