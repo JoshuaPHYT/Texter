@@ -9,7 +9,6 @@ mcpe-protocol:
   - 422 # 1.16.200
 softdepend:
   - FormAPI # jojoe77777/FormAPI
-  - MineFlowLinkage # aiueo/MineFlowLinkage
 virions:
   - accessors-trait # fuyutsuki/AccessorsTrait
   - libdesign # fuyutsuki/libdesign-pattern
