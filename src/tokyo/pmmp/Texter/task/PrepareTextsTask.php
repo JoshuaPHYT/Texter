@@ -31,7 +31,6 @@ use pocketmine\level\Position;
 use pocketmine\scheduler\Task;
 use pocketmine\Server;
 use pocketmine\utils\TextFormat;
-use tokyo\pmmp\Texter\Core;
 use tokyo\pmmp\Texter\data\Data;
 use tokyo\pmmp\Texter\data\FloatingTextData;
 use tokyo\pmmp\Texter\data\UnremovableFloatingTextData;
@@ -64,13 +63,13 @@ class PrepareTextsTask extends Task {
 
   public function __construct() {
     $this->server = Server::getInstance();
-    $this->ufts = UnremovableFloatingTextData::make()->getData();
+    $this->ufts = UnremovableFloatingTextData::getInstance()->getFlatten();
     $this->uftsMax = count($this->ufts);
-    $this->fts = FloatingTextData::make()->getData();
+    $this->fts = FloatingTextData::getInstance()->getFlatten();
     $this->ftsMax = count($this->fts);
   }
 
-  public function onRun(int $tick) {
+  public function onRun(int $currentTick) {
     if ($this->uftsCount === $this->uftsMax) {
       if ($this->ftsCount === $this->ftsMax) {
         $this->onSuccess();
@@ -126,9 +125,8 @@ class PrepareTextsTask extends Task {
         count(TexterApi::getUfts(), COUNT_RECURSIVE) - count(TexterApi::getUfts()),
         count(TexterApi::getFts(), COUNT_RECURSIVE) - count(TexterApi::getFts())
       ]);
-      $core = Core::get();
-      $core->getLogger()->info(TextFormat::GREEN . $message);
-      $core->getScheduler()->cancelTask($this->getTaskId());
+      $plugin->getLogger()->info(TextFormat::GREEN . $message);
+      $plugin->getScheduler()->cancelTask($this->getTaskId());
     }
   }
 }

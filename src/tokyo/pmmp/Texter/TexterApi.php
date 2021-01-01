@@ -53,18 +53,18 @@ class TexterApi {
    * Register text in the Texter plugin and enable management using TexterApi
    * If you don't do this registration,
    * you need to manage FloatingText manually with the Text class.
-   * @link tokyo\pmmp\Texter\text\{Text, FloatingText}
+   * @linkage tokyo\pmmp\Texter\text\{Text, FloatingText}
    * @param Text $text
    */
-  public static function registerText(Text $text): void {
+  public static function registerText(Text $text) {
     switch (true) {
       case $text instanceof UnremovableFloatingText:
-        self::$ufts[$text->getLevel()->getFolderName()][$text->getName()] = $text;
+        self::$ufts[$text->level->getFolderName()][$text->name] = $text;
         break;
 
       case $text instanceof FloatingText:
-        self::$fts[$text->getLevel()->getFolderName()][$text->getName()] = $text;
-        FloatingTextData::make()->saveFtChange($text);
+        self::$fts[$text->level->getFolderName()][$text->name] = $text;
+        FloatingTextData::getInstance()->saveFtChange($text);
         break;
     }
   }
@@ -167,7 +167,7 @@ class TexterApi {
       foreach ($onLevel as $ft) {
         $ft->sendToLevel($level, Text::SEND_TYPE_REMOVE);
       }
-      FloatingTextData::make()->removeFtsByLevel($level);
+      FloatingTextData::getInstance()->removeFtsByLevel($level);
       unset(self::$fts[$level->getFolderName()]);
       return true;
     }
@@ -192,7 +192,7 @@ class TexterApi {
     $ft = self::getFtByLevel($level, $name);
     if (isset($ft)) {
       $ft->sendToLevel($level, Text::SEND_TYPE_REMOVE);
-      FloatingTextData::make()->removeFtByLevel($level, $name);
+      FloatingTextData::getInstance()->removeFtByLevel($level, $name);
       unset(self::$fts[$level->getFolderName()][$name]);
       return true;
     }

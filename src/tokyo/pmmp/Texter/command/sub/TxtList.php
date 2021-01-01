@@ -29,7 +29,6 @@ namespace tokyo\pmmp\Texter\command\sub;
 
 use jojoe77777\FormAPI\SimpleForm;
 use pocketmine\Player;
-use tokyo\pmmp\Texter\Core;
 use tokyo\pmmp\Texter\text\FloatingText;
 use tokyo\pmmp\Texter\TexterApi;
 
@@ -45,7 +44,7 @@ class TxtList extends TexterSubCommand {
   public const REMOVE = 2;
 
   public function execute(string $default = ""): void {
-    $pluginDescription = Core::get()->getDescription();
+    $pluginDescription = $this->plugin->getDescription();
     $description = $this->lang->translateString("form.list.description.1");
 
     $fts = TexterApi::getFtsByLevel($this->player->getLevel());
@@ -67,13 +66,13 @@ class TxtList extends TexterSubCommand {
           if ($key !== null) {
             switch ($key) {
               case self::EDIT:
-                new TxtEdit($player, $target->getName());
+                new TxtEdit($this->plugin, $player, $target->getName());
                 break;
               case self::MOVE:
-                new TxtMove($player, $target->getName());
+                new TxtMove($this->plugin, $player, $target->getName());
                 break;
               case self::REMOVE:
-                new TxtRemove($player, $target->getName());
+                new TxtRemove($this->plugin, $player, $target->getName());
                 break;
             }
           }
@@ -90,7 +89,7 @@ class TxtList extends TexterSubCommand {
 
     $list1->setTitle("[{$pluginDescription->getPrefix()}] /txt list");
     $list1->setContent($description);
-    foreach ($search as $ft) $list1->addButton($ft->getName());
+    foreach ($search as $ft) $list1->addButton($ft->name);
     $this->player->sendForm($list1);
   }
 }

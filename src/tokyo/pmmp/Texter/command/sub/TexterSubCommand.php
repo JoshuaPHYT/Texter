@@ -28,6 +28,7 @@ declare(strict_types = 1);
 namespace tokyo\pmmp\Texter\command\sub;
 
 use pocketmine\Player;
+use pocketmine\plugin\Plugin;
 use tokyo\pmmp\Texter\i18n\Lang;
 use tokyo\pmmp\Texter\i18n\Language;
 
@@ -37,12 +38,15 @@ use tokyo\pmmp\Texter\i18n\Language;
  */
 abstract class TexterSubCommand {
 
+  /** @var Plugin */
+  protected $plugin;
   /** @var Player */
   protected $player;
   /** @var Language */
   protected $lang;
 
-  public function __construct(Player $player, string $default = "") {
+  public function __construct(Plugin $plugin, Player $player, string $default = "") {
+    $this->plugin = $plugin;
     $this->player = $player;
     $this->lang = Lang::fromLocale($player->getLocale());
     $this->execute($default);

@@ -27,6 +27,7 @@ declare(strict_types = 1);
 
 namespace tokyo\pmmp\Texter\data;
 
+use jp\mcbe\libdesign\pattern\Singleton;
 use pocketmine\plugin\PluginBase;
 use pocketmine\utils\Config;
 use tokyo\pmmp\Texter\Core;
@@ -42,15 +43,18 @@ use function is_string;
  * Class ConfigData
  * @package tokyo\pmmp\Texter\data
  */
-class ConfigData extends Config implements Data {
+class ConfigData extends Config {
 
-  /** @var ConfigData */
-  private static $instance;
+  use Singleton {
+    Singleton::__construct as singletonConstruct;
+  }
 
-  public function __construct(PluginBase $plugin, string $path, string $file) {
-    $plugin->saveResource($file);
-    parent::__construct($path.$file, Config::YAML);
-    self::$instance = $this;
+  public const FILE_NAME = "config.yml";
+
+  public function __construct(PluginBase $plugin) {
+    $plugin->saveResource(self::FILE_NAME);
+    parent::__construct($plugin->getDataFolder() . self::FILE_NAME, Config::YAML);
+    $this->singletonConstruct();
     $this->checkIsUpdater();
   }
 
@@ -90,8 +94,8 @@ class ConfigData extends Config implements Data {
 
   public function checkFeedLimit(string $text): bool {
     $limit = $this->getFeedLimit();
-    if ($limit === -1)
-      return true;
+    if ($limit === -1) return true;
+
     $feed = mb_substr_count($text, "#");
     return $limit >= $feed;
   }
@@ -114,7 +118,4 @@ class ConfigData extends Config implements Data {
     return true;// isn't limited
   }
 
-  public static function make(): ConfigData {
-    return self::$instance;
-  }
 }

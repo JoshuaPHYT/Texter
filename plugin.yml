@@ -6,8 +6,10 @@ api: 3.15.0 # pmmp/PocketMine-MP
 mcpe-protocol:
   - 408 # 1.16.20
   - 419 # 1.16.100
+  - 422 # 1.16.200
 softdepend:
   - FormAPI # jojoe77777/FormAPI
+  - MineFlowLinkage # aiueo/MineFlowLinkage
 virions:
   - accessors-trait # fuyutsuki/AccessorsTrait
   - libdesign # fuyutsuki/libdesign-pattern

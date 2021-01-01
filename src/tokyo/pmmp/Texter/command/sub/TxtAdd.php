@@ -31,7 +31,6 @@ use jojoe77777\FormAPI\CustomForm;
 use pocketmine\level\Position;
 use pocketmine\Player;
 use pocketmine\utils\TextFormat;
-use tokyo\pmmp\Texter\Core;
 use tokyo\pmmp\Texter\data\ConfigData;
 use tokyo\pmmp\Texter\text\FloatingText;
 use tokyo\pmmp\Texter\TexterApi;
@@ -48,7 +47,7 @@ class TxtAdd extends TexterSubCommand {
   public const TEXT = 4;
 
   public function execute(string $default = ""): void {
-    $pluginDescription = Core::get()->getDescription();
+    $pluginDescription = $this->plugin->getDescription();
     $description = $this->lang->translateString("form.add.description");
     $ftName = $this->lang->translateString("form.ftname.unique");
     $indent = $this->lang->translateString("command.txt.usage.indent");
@@ -64,7 +63,7 @@ class TxtAdd extends TexterSubCommand {
             $title = $player->isOp() ? $response[self::TITLE] : TextFormat::clean($response[self::TITLE]);
             $text = $player->isOp() ? $response[self::TEXT] : TextFormat::clean($response[self::TEXT]);
             $ft = new FloatingText($response[self::NAME], Position::fromObject($player->add(0, 1, 0), $level), $title, $text, $player->getName());
-            $cd = ConfigData::make();
+            $cd = ConfigData::getInstance();
             if ($cd->checkCharLimit($ft->getTextsForCheck(FloatingText::CHECK_CHAR))) {
               if ($cd->checkFeedLimit($ft->getTextsForCheck(FloatingText::CHECK_FEED))) {
                 $ft->sendToLevel($level);

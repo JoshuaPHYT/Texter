@@ -46,7 +46,7 @@ class TxtMove extends TexterSubCommand {
   public const FT_NAME = 1;
 
   public function execute(string $default = ""): void {
-    $pluginDescription = Core::get()->getDescription();
+    $pluginDescription = $this->plugin->getDescription();
     $description = $this->lang->translateString("form.move.description");
     $ftName = $this->lang->translateString("form.ftname");
 
@@ -57,13 +57,12 @@ class TxtMove extends TexterSubCommand {
           $ft = TexterApi::getFtByLevel($level, $response[self::FT_NAME]);
           if ($ft !== null) {
             if ($ft->isOwner($player)) {
-              $ft
-                ->setPosition(Position::fromObject($player->add(0, 2, 0), $level))
-                ->sendToLevel($level, Text::SEND_TYPE_MOVE);
-              FloatingTextData::make()->saveFtChange($ft);
+              $ft->setPosition(Position::fromObject($player->add(0, 2, 0), $level));
+              $ft->sendToLevel($level, Text::SEND_TYPE_MOVE);
+              FloatingTextData::getInstance()->saveFtChange($ft);
               $message = $this->lang->translateString("command.txt.move.success", [
-                $ft->getName(),
-                $this->lang->translateString("form.move.here")// TODO: xyz specification(3.2.0~)
+                $ft->name,
+                $this->lang->translateString("form.move.here")
               ]);
               $player->sendMessage(TextFormat::GREEN . "[{$pluginDescription->getPrefix()}] $message");
             }else {

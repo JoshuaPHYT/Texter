@@ -27,6 +27,7 @@ declare(strict_types = 1);
 
 namespace tokyo\pmmp\Texter;
 
+use Exception;
 use pocketmine\plugin\PluginBase;
 use pocketmine\utils\TextFormat;
 use pocketmine\utils\VersionString;
@@ -37,7 +38,9 @@ use tokyo\pmmp\Texter\data\UnremovableFloatingTextData;
 use tokyo\pmmp\Texter\i18n\Lang;
 use tokyo\pmmp\Texter\task\CheckUpdateTask;
 use tokyo\pmmp\Texter\task\PrepareTextsTask;
+use tokyo\pmmp\Texter\util\DependenciesNamespace;
 use function class_exists;
+use function trait_exists;
 
 /**
  * Class Core
@@ -45,39 +48,42 @@ use function class_exists;
  */
 class Core extends PluginBase {
 
-  /** @var Core */
-  private static $core;
   /** @var bool */
   private static $isUpdater = false;
 
+  public static function isUpdater(): bool {
+    return self::$isUpdater;
+  }
+
+  public static function setIsUpdater(bool $bool = true) {
+    self::$isUpdater = $bool;
+  }
+
   public function onLoad() {
-    self::$core = $this;
-    $this
-      ->loadResources()
-      ->loadLanguage()
-      ->registerCommands()
-      ->prepareTexts()
-      ->checkUpdate();
+    $this->loadResources();
+    $this->loadLanguage();
+    $this->registerCommands();
+    $this->prepareTexts();
+    $this->checkUpdate();
+    $this->mineflowLinkage();
   }
 
   public function onEnable() {
     if ($this->checkPackaged()) {
-      $listener = new EventListener;
+      $listener = new EventListener($this);
       $this->getServer()->getPluginManager()->registerEvents($listener, $this);
     }else {
       $this->getServer()->getPluginManager()->disablePlugin($this);
     }
   }
 
-  private function loadResources(): self {
-    $dir = $this->getDataFolder();
-    new ConfigData($this, $dir, "config.yml");
-    new UnremovableFloatingTextData($this, $dir, "uft.json");
-    new FloatingTextData($this, $dir, "ft.json");
-    return $this;
+  private function loadResources() {
+    new ConfigData($this);
+    new UnremovableFloatingTextData($this);
+    new FloatingTextData($this);
   }
 
-  private function loadLanguage(): self {
+  private function loadLanguage() {
     new Lang($this);
     $cl = Lang::fromConsole();
     $message1 = $cl->translateString("language.selected", [
@@ -89,39 +95,32 @@ class Core extends PluginBase {
       $message2 = $cl->translateString("on.load.is.updater");
       $this->getLogger()->notice($message2);
     }
-    return $this;
   }
 
-  private function registerCommands(): self {
-    if ($canUse = ConfigData::make()->canUseCommands()) {
+  private function registerCommands() {
+    if ($canUse = ConfigData::getInstance()->canUseCommands()) {
       $map = $this->getServer()->getCommandMap();
-      $commands = [
-        new TxtCommand($this),
-      ];
-      $map->registerAll($this->getName(), $commands);
+      $map->register($this->getName(), new TxtCommand($this), TxtCommand::NAME);
       $message = Lang::fromConsole()->translateString("on.load.commands.on");
     }else {
       $message = Lang::fromConsole()->translateString("on.load.commands.off");
     }
     $this->getLogger()->info(($canUse ? TextFormat::GREEN : TextFormat::RED) . $message);
-    return $this;
   }
 
-  private function prepareTexts(): self {
+  private function prepareTexts() {
     $prepare = new PrepareTextsTask;
     $this->getScheduler()->scheduleDelayedRepeatingTask($prepare, 20, 1);
-    return $this;
   }
 
-  private function checkUpdate(): self {
-    if (ConfigData::make()->checkUpdate()) {
+  private function checkUpdate() {
+    if (ConfigData::getInstance()->checkUpdate()) {
       try {
         $this->getServer()->getAsyncPool()->submitTask(new CheckUpdateTask);
-      } catch (\Exception $ex) {
+      } catch (Exception $ex) {
         $this->getLogger()->warning($ex->getMessage());
       }
     }
-    return $this;
   }
 
   public function compareVersion(bool $success, ?VersionString $new = null, string $url = "") {
@@ -159,44 +158,56 @@ class Core extends PluginBase {
     }
   }
 
+  private function mineflowLinkage() {
+    $plugins = $this->getServer()->getPluginManager()->getPlugins();
+    if (isset($plugins["MineFlowLinkage"])) {
+
+    }
+  }
+
   private function checkPackaged(): bool {
     $cl = Lang::fromConsole();
     $logger = $this->getLogger();
+    $result = true;
     if ($this->isPhar()) {
-      if (class_exists("\\tokyo\\pmmp\\Texter\\libs\\jojoe77777\\FormAPI\\FormAPI")) {
-        return true;// PoggitCI
-      }else {
+      if (!class_exists(DependenciesNamespace::PACKAGED_LIBRARY_NAMESPACE . DependenciesNamespace::LIB_FORM_API)) {
         $message = $cl->translateString("error.on.enable.not.packaged");
         $logger->critical($message);
-        return false;
+        $result = false;
+      }else {
+        foreach (DependenciesNamespace::PACKAGED_LIBRARY_TRAITS as $libraryClassString) {
+          if (!trait_exists($libraryClassString)) {
+            $message = $cl->translateString("error.on.enable.not.packaged");
+            $logger->critical($message);
+            $result = false;
+            break;
+          }
+        }
       }
     }else {
       $plugins = $this->getServer()->getPluginManager()->getPlugins();
-      if (isset($plugins["DEVirion"]) || isset($plugins["FormAPI"])) {
-        if (class_exists("\\jojoe77777\\FormAPI\\FormAPI")) {
-          return true;// developer
-        }else {
-          $message = $cl->translateString("error.on.enable.not.found.libformapi");
+      if (isset($plugins["DEVirion"])) {
+        if (!class_exists(DependenciesNamespace::LIB_FORM_API)) {
+          $message = $cl->translateString("error.on.enable.virion.not.found");
           $logger->critical($message);
-          return false;
+          $result = false;
+        }else {
+          foreach (DependenciesNamespace::VIRION_LIBRARY_TRAITS as $virionClassString) {
+            if (!trait_exists($virionClassString)) {
+              $message = $cl->translateString("error.on.enable.virion.not.found");
+              $logger->critical($message);
+              $result = false;
+              break;
+            }
+          }
         }
       }else {
         $message = $cl->translateString("error.on.enable.not.packaged");
         $logger->critical($message);
-        return false;
+        $result = false;
       }
     }
+    return $result;
   }
 
-  public static function isUpdater(): bool {
-    return self::$isUpdater;
-  }
-
-  public static function setIsUpdater(bool $bool = true) {
-    self::$isUpdater = $bool;
-  }
-
-  public static function get(): Core {
-    return self::$core;
-  }
 }

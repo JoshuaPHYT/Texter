@@ -62,11 +62,6 @@ interface Text {
    */
   public function sendToLevel(Level $level, int $type = Text::SEND_TYPE_ADD);
 
-  /**
-   * @return array[string key] = value
-   */
-  public function format(): array;
-
   public function __toString(): string;
 
 }

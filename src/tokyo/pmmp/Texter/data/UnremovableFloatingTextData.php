@@ -27,6 +27,7 @@ declare(strict_types = 1);
 
 namespace tokyo\pmmp\Texter\data;
 
+use jp\mcbe\libdesign\pattern\Singleton;
 use pocketmine\plugin\Plugin;
 use pocketmine\utils\Config;
 
@@ -34,41 +35,33 @@ use pocketmine\utils\Config;
  * Class UnremovableFloatingTextData
  * @package tokyo\pmmp\Texter\data
  */
-class UnremovableFloatingTextData extends Config implements Data {
+class UnremovableFloatingTextData extends Config {
 
-  /** @var UnremovableFloatingTextData */
-  private static $instance;
-
-  public function __construct(Plugin $plugin, string $path, string $file) {
-    $plugin->saveResource($file);
-    parent::__construct($path.$file, Config::JSON);
-    $this->enableJsonOption(Data::JSON_OPTIONS);
-    self::$instance = $this;
+  use Singleton {
+    Singleton::__construct as singletonConstruct;
   }
 
-  public function getData(): array {
-    $data = [];
+  public const FILE_NAME = "uft.json";
+
+  public function __construct(Plugin $plugin) {
+    $plugin->saveResource(self::FILE_NAME);
+    parent::__construct($plugin->getDataFolder() . self::FILE_NAME, Config::JSON);
+    $this->singletonConstruct();
+    $this->enableJsonOption(Data::JSON_OPTIONS);
+  }
+
+  public function getFlatten(): array {
     $ufts = $this->getAll();
-    foreach ($ufts as $levelName => $texts) {
-      foreach ($texts as $textName => $val) {
-        $data[] = [
-          Data::KEY_NAME => (string) $textName,
-          Data::KEY_LEVEL => (string) $levelName,
-          Data::KEY_X => (float) $val[Data::KEY_X],
-          Data::KEY_Y => (float) $val[Data::KEY_Y],
-          Data::KEY_Z => (float) $val[Data::KEY_Z],
-          Data::KEY_TITLE => (string) $val[Data::KEY_TITLE],
-          Data::KEY_TEXT => (string) $val[Data::KEY_TEXT]
+    $result = [];
+    foreach ($ufts as $levelName => $arrayUfts) {
+      foreach ($arrayUfts as $uftName => $arrayUft) {
+        $arrayUft += [
+          Data::KEY_NAME => $uftName,
+          Data::KEY_LEVEL => $levelName,
         ];
+        $result[] = $arrayUft;
       }
     }
-    return $data;
-  }
-
-  /**
-   * @return UnremovableFloatingTextData
-   */
-  public static function make(): UnremovableFloatingTextData {
-    return self::$instance;
+    return $result;
   }
 }

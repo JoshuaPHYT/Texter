@@ -27,6 +27,7 @@ declare(strict_types = 1);
 
 namespace tokyo\pmmp\Texter\i18n;
 
+use jp\mcbe\libdesign\pattern\Singleton;
 use tokyo\pmmp\Texter\Core;
 use tokyo\pmmp\Texter\data\ConfigData;
 use function strtolower;
@@ -37,11 +38,14 @@ use function strtolower;
  */
 class Lang {
 
+  use Singleton {
+    Singleton::__construct as singletonConstruct;
+    Singleton::getInstance as get;
+  }
+
   public const DIR = "language";
   public const FALLBACK = "en_us";
 
-  /** @var Lang */
-  private static $instance;
   /** @var Language[] */
   private static $language;
   /** @var string */
@@ -58,11 +62,11 @@ class Lang {
   ];
 
   public function __construct(Core $core) {
-    self::$instance = $this;
-    self::$consoleLang = ConfigData::make()->getLocale();
+    $this->singletonConstruct();
+    self::$consoleLang = ConfigData::getInstance()->getLocale();
     foreach (self::$available as $lang) {
       $core->saveResource(Lang::DIR . DIRECTORY_SEPARATOR . $lang . ".ini", true);
-      $this->register(new Language($lang));
+      $this->register(new Language($core, $lang));
     }
   }
 
@@ -93,12 +97,5 @@ class Lang {
    */
   public static function fromConsole(): Language {
     return self::fromLocale(self::$consoleLang);
-  }
-
-  /**
-   * @return Lang
-   */
-  public static function get(): self {
-    return self::$instance;
   }
 }

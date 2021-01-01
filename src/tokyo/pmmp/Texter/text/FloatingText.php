@@ -27,6 +27,7 @@ declare(strict_types = 1);
 
 namespace tokyo\pmmp\Texter\text;
 
+use jp\mcbe\accessors\AccessorsTrait;
 use pocketmine\entity\Entity;
 use pocketmine\entity\Skin;
 use pocketmine\item\Item;
@@ -45,6 +46,7 @@ use pocketmine\utils\TextFormat;
 use pocketmine\utils\UUID;
 use tokyo\pmmp\Texter\data\Data;
 use tokyo\pmmp\Texter\data\FloatingTextData;
+use JsonSerializable;
 use function str_replace;
 use function strtolower;
 use function str_repeat;
@@ -53,8 +55,17 @@ use function sprintf;
 /**
  * Class FloatingText
  * @package tokyo\pmmp\Texter\text
+ *
+ * @property string $name
+ * @property string $title
+ * @property string $text
+ * @property string $owner
+ * @property int $eid
+ * @property bool $isInvisible
  */
-class FloatingText extends Position implements Text {
+class FloatingText extends Position implements Text, JsonSerializable {
+
+  use AccessorsTrait;
 
   public const CHECK_CHAR = 0;
   public const CHECK_FEED = 1;
@@ -73,50 +84,48 @@ class FloatingText extends Position implements Text {
   /** @var bool */
   protected $isInvisible = false;
 
-  public function __construct(string $name, Position $pos, string $title = "", string $text = "", string $owner = "unknown", int $eid = 0) {
-    $this
-      ->setName($name)
-      ->setPosition($pos)
-      ->setTitle($title)
-      ->setText($text)
-      ->setOwner($owner)
-      ->setEid($eid);
+  public function __construct(
+    string $name,
+    Position $pos,
+    string $title = "",
+    string $text = "",
+    string $owner = "unknown",
+    int $eid = 0
+  ) {
+    $this->setName($name);
+    $this->setPosition($pos);
+    $this->setTitle($title);
+    $this->setText($text);
+    $this->setOwner($owner);
+    $this->setEid($eid);
   }
 
-  public function getName(): string {
-    return $this->name;
-  }
-
-  public function setName(string $name): FloatingText {
+  public function setName(string $name) {
     $this->name = $name;
-    return $this;
   }
 
   public function getPosition(): Position {
     return $this->asPosition();
   }
 
-  public function setPosition(Position $pos): FloatingText {
+  public function setPosition(Position $pos) {
     parent::__construct($pos->x, $pos->y, $pos->z, $pos->level);
-    return $this;
   }
 
   public function getTitle(): string {
     return str_replace("\n", "#", $this->title);
   }
 
-  public function setTitle(string $title): FloatingText {
+  public function setTitle(string $title) {
     $this->title = str_replace("#", "\n", $title);
-    return $this;
   }
 
   public function getText(): string {
     return str_replace("\n", "#", $this->text);
   }
 
-  public function setText(string $text): FloatingText {
+  public function setText(string $text) {
     $this->text = str_replace("#", "\n", $text);
-    return $this;
   }
 
   public function getIndentedTexts(bool $owned): string {
@@ -142,31 +151,16 @@ class FloatingText extends Position implements Text {
     return ($player->isOp() || strtolower($player->getName()) === $this->owner) && !$this instanceof UnremovableFloatingText;
   }
 
-  public function getOwner(): string {
-    return $this->owner;
-  }
-
-  public function setOwner(string $owner): FloatingText {
+  public function setOwner(string $owner) {
     $this->owner = strtolower($owner);
-    return $this;
   }
 
-  public function getEid(): int {
-    return $this->eid;
-  }
-
-  public function setEid(int $eid): FloatingText {
+  public function setEid(int $eid) {
     $this->eid = $eid === 0 ? Entity::$entityCount++ : $eid;
-    return $this;
   }
 
-  public function isInvisible(): bool {
-    return $this->isInvisible;
-  }
-
-  public function setInvisible(bool $value): FloatingText {
+  public function setInvisible(bool $value) {
     $this->isInvisible = $value;
-    return $this;
   }
 
   /**
@@ -249,27 +243,24 @@ class FloatingText extends Position implements Text {
     return $pks;
   }
 
-  public function sendToPlayer(Player $player, int $type = Text::SEND_TYPE_ADD): FloatingText {
+  public function sendToPlayer(Player $player, int $type = Text::SEND_TYPE_ADD) {
     $pks = $this->asPackets($type, $this->isOwner($player));
     foreach ($pks as $pk) {
       $player->sendDataPacket($pk);
     }
-    return $this;
   }
 
-  public function sendToPlayers(array $players, int $type = Text::SEND_TYPE_ADD): FloatingText {
+  public function sendToPlayers(array $players, int $type = Text::SEND_TYPE_ADD) {
     foreach ($players as $player) {
       $this->sendToPlayer($player, $type);
     }
-    return $this;
   }
 
-  public function sendToLevel(Level $level, int $type = Text::SEND_TYPE_ADD): FloatingText {
+  public function sendToLevel(Level $level, int $type = Text::SEND_TYPE_ADD) {
     $this->sendToPlayers($level->getPlayers(), $type);
-    return $this;
   }
 
-  public function format(): array {
+  public function jsonSerialize(): array {
     return [
       Data::KEY_X => sprintf('%0.1f', $this->x),
       Data::KEY_Y => sprintf('%0.1f', $this->y),
@@ -281,7 +272,7 @@ class FloatingText extends Position implements Text {
   }
 
   public function __toString(): string {
-    $p = $this->getPosition();
-    return "FloatingText(name=\"{$this->name}\", pos=\"x:{$p->x};y:{$p->y};z:{$p->z};level:{$p->getLevel()->getFolderName()}\", title=\"{$this->title}\", text=\"{$this->text}\", owner=\"{$this->owner}\", eid=\"{$this->eid}\")";
+    return "FloatingText(name=\"{$this->name}\", pos=\"x:{$this->x};y:{$this->y};z:{$this->z};level:{$this->level->getFolderName()}\", title=\"{$this->title}\", text=\"{$this->text}\", owner=\"{$this->owner}\", eid=\"{$this->eid}\")";
   }
+
 }

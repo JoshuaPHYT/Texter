@@ -28,10 +28,10 @@ declare(strict_types = 1);
 namespace tokyo\pmmp\Texter\data;
 
 /**
- * Interface Data
+ * Class Data
  * @package tokyo\pmmp\Texter\data
  */
-interface Data {
+final class Data {
 
   public const KEY_NAME = "NAME";
   public const KEY_LEVEL = "LEVEL";
@@ -43,5 +43,7 @@ interface Data {
 
   public const JSON_OPTIONS = JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE;
 
-  public static function make();
+  private function __construct() {
+    // THIS IS CONSTANT CLASS
+  }
 }

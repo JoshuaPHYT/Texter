@@ -34,6 +34,7 @@ use pocketmine\event\server\DataPacketSendEvent;
 use pocketmine\network\mcpe\protocol\AvailableCommandsPacket;
 use pocketmine\network\mcpe\protocol\ProtocolInfo;
 use pocketmine\Player;
+use pocketmine\plugin\Plugin;
 use tokyo\pmmp\Texter\command\TxtCommand;
 use tokyo\pmmp\Texter\i18n\Lang;
 use tokyo\pmmp\Texter\task\SendTextsTask;
@@ -41,27 +42,33 @@ use tokyo\pmmp\Texter\text\Text;
 
 class EventListener implements Listener {
 
-  public function onJoin(PlayerJoinEvent $ev): void {
-    $p = $ev->getPlayer();
-    $l = $p->getLevel();
-    $add = new SendTextsTask($p, $l);
-    Core::get()->getScheduler()->scheduleDelayedRepeatingTask($add, 20, 1);
+  /** @var Plugin */
+  private $plugin;
+
+  public function __construct(Plugin $plugin) {
+    $this->plugin = $plugin;
   }
 
-  public function onLevelChange(EntityLevelChangeEvent $ev): void {
+  public function onJoin(PlayerJoinEvent $ev) {
+    $p = $ev->getPlayer();
+    $l = $p->getLevel();
+    $add = new SendTextsTask($this->plugin, $p, $l);
+    $this->plugin->getScheduler()->scheduleDelayedRepeatingTask($add, 20, 1);
+  }
+
+  public function onLevelChange(EntityLevelChangeEvent $ev) {
     $ent = $ev->getEntity();
     if ($ent instanceof Player) {
       $from = $ev->getOrigin();
       $to = $ev->getTarget();
-      $core = Core::get();
-      $remove = new SendTextsTask($ent, $from, Text::SEND_TYPE_REMOVE);
-      $core->getScheduler()->scheduleDelayedRepeatingTask($remove, 20, 1);
-      $add = new SendTextsTask($ent, $to);
-      $core->getScheduler()->scheduleDelayedRepeatingTask($add, 20, 1);
+      $remove = new SendTextsTask($this->plugin, $ent, $from, Text::SEND_TYPE_REMOVE);
+      $this->plugin->getScheduler()->scheduleDelayedRepeatingTask($remove, SendTextsTask::DELAY_TICKS, SendTextsTask::TICKING_PERIOD);
+      $add = new SendTextsTask($this->plugin, $ent, $to);
+      $this->plugin->getScheduler()->scheduleDelayedRepeatingTask($add, SendTextsTask::DELAY_TICKS, SendTextsTask::TICKING_PERIOD);
     }
   }
 
-  public function onSendPacket(DataPacketSendEvent $ev): void {
+  public function onSendPacket(DataPacketSendEvent $ev) {
     $pk = $ev->getPacket();
     if ($pk->pid() === ProtocolInfo::AVAILABLE_COMMANDS_PACKET) {
       /** @var AvailableCommandsPacket $pk */

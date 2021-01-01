@@ -30,7 +30,6 @@ namespace tokyo\pmmp\Texter\command\sub;
 use jojoe77777\FormAPI\CustomForm;
 use pocketmine\Player;
 use pocketmine\utils\TextFormat;
-use tokyo\pmmp\Texter\Core;
 use tokyo\pmmp\Texter\data\ConfigData;
 use tokyo\pmmp\Texter\data\FloatingTextData;
 use tokyo\pmmp\Texter\text\Text;
@@ -50,7 +49,7 @@ class TxtEdit extends TexterSubCommand {
   public const CONTENT = 4;
 
   public function execute(string $default = ""): void {
-    $pluginDescription = Core::get()->getDescription();
+    $pluginDescription = $this->plugin->getDescription();
     $description = $this->lang->translateString("form.edit.description");
     $ftName = $this->lang->translateString("form.ftname");
     $type = $this->lang->translateString("form.edit.type");
@@ -66,18 +65,17 @@ class TxtEdit extends TexterSubCommand {
           $ft = TexterApi::getFtByLevel($level, $response[self::FT_NAME]);
           if ($ft !== null) {
             if ($ft->isOwner($player)) {
-              $cd = ConfigData::make();
+              $cd = ConfigData::getInstance();
               switch ($response[self::TYPE]) {
                 case self::TITLE:
                   $test = TextFormat::clean($response[self::CONTENT].$ft->getText());
                   if ($cd->checkCharLimit(str_replace("\n", "", $test))) {
                     if ($cd->checkFeedLimit($test)) {
-                      $ft
-                        ->setTitle($response[self::CONTENT])
-                        ->sendToLevel($level, Text::SEND_TYPE_EDIT);
-                      FloatingTextData::make()->saveFtChange($ft);
+                      $ft->title = $response[self::CONTENT];
+                      $ft->sendToLevel($level, Text::SEND_TYPE_EDIT);
+                      FloatingTextData::getInstance()->saveFtChange($ft);
                       $message = $this->lang->translateString("command.txt.edit.success", [
-                        $ft->getName(),
+                        $ft->name,
                         $title
                       ]);
                       $player->sendMessage(TextFormat::GREEN . "[{$pluginDescription->getPrefix()}] $message");
@@ -89,12 +87,11 @@ class TxtEdit extends TexterSubCommand {
                   $test = TextFormat::clean($ft->getTitle().$response[self::CONTENT]);
                   if ($cd->checkCharLimit(str_replace("\n", "", $test))) {
                     if ($cd->checkFeedLimit($test)) {
-                      $ft
-                        ->setText($response[self::CONTENT])
-                        ->sendToLevel($level, Text::SEND_TYPE_EDIT);
-                      FloatingTextData::make()->saveFtChange($ft);
+                      $ft->text = $response[self::CONTENT];
+                      $ft->sendToLevel($level, Text::SEND_TYPE_EDIT);
+                      FloatingTextData::getInstance()->saveFtChange($ft);
                       $message = $this->lang->translateString("command.txt.edit.success", [
-                        $ft->getName(),
+                        $ft->name,
                         $text
                       ]);
                       $player->sendMessage(TextFormat::GREEN . "[{$pluginDescription->getPrefix()}] $message");

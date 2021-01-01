@@ -29,7 +29,10 @@ namespace tokyo\pmmp\Texter\command;
 
 use pocketmine\command\CommandSender;
 use pocketmine\command\PluginCommand;
+use pocketmine\command\utils\CommandException;
+use pocketmine\command\utils\InvalidCommandSyntaxException;
 use pocketmine\Player;
+use pocketmine\plugin\PluginException;
 use pocketmine\utils\TextFormat;
 use tokyo\pmmp\Texter\command\sub\TxtAdd;
 use tokyo\pmmp\Texter\command\sub\TxtEdit;
@@ -49,58 +52,56 @@ class TxtCommand extends PluginCommand {
   public const NAME = "txt";
 
   public function __construct(Core $plugin) {
+    parent::__construct(self::NAME, $plugin);
     $cl = Lang::fromConsole();
-    $permission = ConfigData::make()->canUseOnlyOp() ? "texter.command.*" : "texter.command.txt";
+    $permission = ConfigData::getInstance()->canUseOnlyOp() ? "texter.command.*" : "texter.command.txt";
     $description = $cl->translateString("command.txt.description");
     $usage = $cl->translateString("command.txt.usage");
     $this->setPermission($permission);
     $this->setDescription($description);
     $this->setUsage($usage);
-    parent::__construct(self::NAME, $plugin);
   }
 
-  public function execute(CommandSender $sender, string $commandLabel, array $args) {
-    if (Core::get()->isDisabled() || !$this->testPermission($sender)) return false;
+  public function execute(CommandSender $sender, string $commandLabel, array $args): bool {
+    $plugin = $this->getPlugin();
+    if ($plugin->isDisabled() || !$this->testPermission($sender)) return false;
     if ($sender instanceof Player) {
-      $pluginDescription = Core::get()->getDescription();
-      $cd = ConfigData::make();
+      $pluginDescription = $plugin->getDescription();
+      $cd = ConfigData::getInstance();
       $lang = Lang::fromLocale($sender->getLocale());
       if ($cd->checkWorldLimit($sender->getLevel()->getName())) {
         if (isset($args[0])) {
           switch ($args[0]) {
             case "add":
             case "a":
-              new TxtAdd($sender);
+              new TxtAdd($plugin, $sender);
               break;
 
             case "edit":
             case "e":
-              new TxtEdit($sender);
+              new TxtEdit($plugin, $sender);
               break;
 
             case "move":
             case "m":
-              new TxtMove($sender);
+              new TxtMove($plugin, $sender);
               break;
 
             case "remove":
             case "r":
-              new TxtRemove($sender);
+              new TxtRemove($plugin, $sender);
               break;
 
             case "list":
             case "l":
-              new TxtList($sender);
+              new TxtList($plugin, $sender);
               break;
 
             default:
-              $message = $lang->translateString("command.txt.usage");
-              $sender->sendMessage("[{$pluginDescription->getPrefix()}] $message");
-              break;
+              throw new InvalidCommandSyntaxException;
           }
         }else {
-          $message = $lang->translateString("command.txt.usage");
-          $sender->sendMessage("[{$pluginDescription->getPrefix()}] $message");
+          throw new InvalidCommandSyntaxException;
         }
       }else {
         $message = $lang->translateString("error.config.limit.world", [
@@ -110,7 +111,7 @@ class TxtCommand extends PluginCommand {
       }
     }else {
       $info = Lang::fromConsole()->translateString("error.console");
-      Core::get()->getLogger()->info(TextFormat::RED.$info);
+      $plugin->getLogger()->info(TextFormat::RED.$info);
     }
     return true;
   }

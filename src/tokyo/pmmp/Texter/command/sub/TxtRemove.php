@@ -44,7 +44,7 @@ class TxtRemove extends TexterSubCommand {
   public const FT_NAME = 1;
 
   public function execute(string $default = ""): void {
-    $pluginDescription = Core::get()->getDescription();
+    $pluginDescription = $this->plugin->getDescription();
     $description = $this->lang->translateString("form.remove.description");
     $ftName = $this->lang->translateString("form.ftname");
 
@@ -56,9 +56,9 @@ class TxtRemove extends TexterSubCommand {
           if ($ft !== null) {
             if ($ft->isOwner($player)) {
               $ft->sendToLevel($level, Text::SEND_TYPE_REMOVE);
-              TexterApi::removeFtByLevel($level, $ft->getName());
+              TexterApi::removeFtByLevel($level, $ft->name);
               $message = $this->lang->translateString("command.txt.remove.success", [
-                $ft->getName()
+                $ft->name
               ]);
               $player->sendMessage(TextFormat::GREEN . "[{$pluginDescription->getPrefix()}] $message");
             }else {

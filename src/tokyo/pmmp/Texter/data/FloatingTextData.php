@@ -27,6 +27,7 @@ declare(strict_types = 1);
 
 namespace tokyo\pmmp\Texter\data;
 
+use jp\mcbe\libdesign\pattern\Singleton;
 use pocketmine\level\Level;
 use pocketmine\plugin\Plugin;
 use pocketmine\utils\Config;
@@ -36,29 +37,27 @@ use tokyo\pmmp\Texter\text\FloatingText;
  * Class FloatingTextData
  * @package tokyo\pmmp\Texter\data
  */
-class FloatingTextData extends Config implements Data {
+class FloatingTextData extends Config {
 
+  use Singleton {
+    Singleton::__construct as singletonConstruct;
+  }
+
+  public const FILE_NAME = "ft.json";
   public const KEY_OWNER = "OWNER";
 
-  /** @var FloatingTextData */
-  private static $instance;
-
-  public function __construct(Plugin $plugin, string $path, string $file) {
-    $plugin->saveResource($file);
-    parent::__construct($path.$file, Config::JSON);
+  public function __construct(Plugin $plugin) {
+    $plugin->saveResource(self::FILE_NAME);
+    parent::__construct($plugin->getDataFolder() . self::FILE_NAME, Config::JSON);
+    $this->singletonConstruct();
     $this->enableJsonOption(Data::JSON_OPTIONS);
-    self::$instance = $this;
   }
 
   public function saveFtChange(FloatingText $ft): bool {
     $levelName = $ft->level->getFolderName();
     $levelFts = $this->get($levelName, []);
-    if (!empty($levelFts)) {
-      $levelFts[$ft->getName()] = $ft->format();
-      $this->set($levelName, $levelFts);
-    }else {
-      $this->set($levelName, [$ft->getName() => $ft->format()]);
-    }
+    $levelFts[$ft->name] = $ft->jsonSerialize();
+    $this->set($levelName, $levelFts);
     $this->save();
     return true;
   }
@@ -75,11 +74,11 @@ class FloatingTextData extends Config implements Data {
     return $bool;
   }
 
-  public function removeFtByLevel(Level $level, string $name): void {
+  public function removeFtByLevel(Level $level, string $name) {
     $this->removeFtByLevelName($level->getFolderName(), $name);
   }
 
-  public function removeFtByLevelName(string $levelName, string $name): void {
+  public function removeFtByLevelName(string $levelName, string $name) {
     if ($this->exists($levelName)) {
       $levelFts = $this->get($levelName);
       unset($levelFts[$name]);
@@ -88,30 +87,18 @@ class FloatingTextData extends Config implements Data {
     }
   }
 
-  public function getData(): array {
-    $data = [];
+  public function getFlatten(): array {
     $fts = $this->getAll();
-    foreach ($fts as $levelName => $texts) {
-      foreach ($texts as $textName => $val) {
-        $data[] = [
-          Data::KEY_NAME => (string) $textName,
-          Data::KEY_LEVEL => (string) $levelName,
-          Data::KEY_X => (float) $val[Data::KEY_X],
-          Data::KEY_Y => (float) $val[Data::KEY_Y],
-          Data::KEY_Z => (float) $val[Data::KEY_Z],
-          Data::KEY_TITLE => (string) $val[Data::KEY_TITLE],
-          Data::KEY_TEXT => (string) $val[Data::KEY_TEXT],
-          FloatingTextData::KEY_OWNER => (string) $val[FloatingTextData::KEY_OWNER]
+    $result = [];
+    foreach ($fts as $levelName => $arrayFts) {
+      foreach ($arrayFts as $ftName => $arrayFt) {
+        $arrayFt += [
+          Data::KEY_NAME => $ftName,
+          Data::KEY_LEVEL => $levelName,
         ];
+        $result[] = $arrayFt;
       }
     }
-    return $data;
-  }
-
-  /**
-   * @return FloatingTextData
-   */
-  public static function make(): FloatingTextData {
-    return self::$instance;
+    return $result;
   }
 }

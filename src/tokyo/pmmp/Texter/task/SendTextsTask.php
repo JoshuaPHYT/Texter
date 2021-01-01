@@ -29,6 +29,7 @@ namespace tokyo\pmmp\Texter\task;
 
 use pocketmine\level\Level;
 use pocketmine\Player;
+use pocketmine\plugin\Plugin;
 use pocketmine\scheduler\Task;
 use tokyo\pmmp\Texter\Core;
 use tokyo\pmmp\Texter\text\Text;
@@ -40,6 +41,11 @@ use tokyo\pmmp\Texter\TexterApi;
  */
 class SendTextsTask extends Task {
 
+  public const DELAY_TICKS = 20;
+  public const TICKING_PERIOD = 1;
+
+  /** @var Plugin */
+  private $plugin;
   /** @var Player */
   private $target;
   /** @var int */
@@ -56,7 +62,8 @@ class SendTextsTask extends Task {
   private $ftsKey = 0;
   private $ftsKeyMax;
 
-  public function __construct(Player $target, Level $sendTo, int $type = Text::SEND_TYPE_ADD) {
+  public function __construct(Plugin $plugin, Player $target, Level $sendTo, int $type = Text::SEND_TYPE_ADD) {
+    $this->plugin = $plugin;
     $this->target = $target;
     $this->type = $type;
     $this->ufts = array_values(TexterApi::getUftsByLevel($sendTo));
@@ -82,6 +89,6 @@ class SendTextsTask extends Task {
   }
 
   private function onSuccess(): void {
-    Core::get()->getScheduler()->cancelTask($this->getTaskId());
+    $this->plugin->getScheduler()->cancelTask($this->getTaskId());
   }
 }

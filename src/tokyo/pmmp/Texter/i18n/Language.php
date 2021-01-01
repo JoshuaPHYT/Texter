@@ -28,7 +28,7 @@ declare(strict_types = 1);
 namespace tokyo\pmmp\Texter\i18n;
 
 use pocketmine\lang\BaseLang;
-use tokyo\pmmp\Texter\Core;
+use pocketmine\plugin\Plugin;
 
 /**
  * Class Language - simple wrapper for BaseLang
@@ -36,8 +36,8 @@ use tokyo\pmmp\Texter\Core;
  */
 class Language extends BaseLang {
 
-  public function __construct(string $lang) {
-    $path = Core::get()->getDataFolder().Lang::DIR.DIRECTORY_SEPARATOR;
+  public function __construct(Plugin $plugin, string $lang) {
+    $path = $plugin->getDataFolder() . Lang::DIR . DIRECTORY_SEPARATOR;
     parent::__construct($lang, $path, Lang::FALLBACK);
   }
 }
