@@ -1,42 +1,46 @@
-name: Texter
-prefix: Texter
-main: tokyo\pmmp\Texter\Core
-version: 3.4.13
-api: 3.15.0 # pmmp/PocketMine-MP
-mcpe-protocol:
-  - 408 # 1.16.20
-  - 419 # 1.16.100
-  - 422 # 1.16.200
-softdepend:
-  - FormAPI # jojoe77777/FormAPI
-virions:
-  - libFormAPI # jojoe77777/libFormAPI
-author: yuko_fuyutsuki
-authors:
-# SpecialThanks
-- mfmfnek0
-- onebone
-- ogiwara
-- Shootsta_ERU0531
-- Toganon
-- ShadowArt
-- Marron0421
-- No4NaMe # Russian translation
-- SuperYYT # Chinese translation
-- SuperAdam47 # Turkish translation
-- minijaham # Korean translation
-- VicoSilalahi # Indonesian translation
-website: https://github.com/fuyutsuki/Texter
+abstract class Animal {
+    private String name;
+    public Animal(String name) {
+        this.name = name;
+    }
+    public String speak() {
+        return name + " says " + sound();
+    }
+    public abstract String sound();
+}
 
-permissions:
- texter.*:
-  default: op
-  description: permission that allows player to use texter
-  children:
-   texter.command.*:
-    default: op
-    description: permission that allows player to use texter commands
-    children:
-      texter.command.txt:
-        default: true
-        description: permission that allows player to use /txt
+class Cow extends Animal {
+    public Cow(String name) {
+        super(name);
+    }
+    @Override public String sound() {
+        return "moooooo";
+    }
+}
+
+class Horse extends Animal {
+    public Horse(String name) {
+        super(name);
+    }
+    @Override public String sound() {
+        return "neigh";
+    }
+}
+
+class Sheep extends Animal {
+    public Sheep(String name) {
+        super(name);
+    }
+    @Override public String sound() {
+        return "baaaa";
+    }
+}
+
+public class AnimalDemo {
+    public static void main(String[] args) {
+        Animal h = new Horse("CJ");
+        System.out.println(h.speak());
+        Animal c = new Cow("Bessie");
+        System.out.println(c.speak());
+        System.out.println(new Sheep("Little Lamb").speak());
+    }
